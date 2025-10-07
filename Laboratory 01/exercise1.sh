@@ -35,5 +35,3 @@ else
 
     cd "$initial_path"
 fi
-
-
