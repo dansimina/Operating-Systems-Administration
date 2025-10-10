@@ -20,7 +20,8 @@ then
     then
         echo Already exists as a directory
     else
-        echo Already exists as a file
+        echo Already exists as a file of type: $(cut -d. -f2 <<< "$2")
+
     fi
 else
     initial_path=$(pwd)
