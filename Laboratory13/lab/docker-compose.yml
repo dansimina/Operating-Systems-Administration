@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.9.2
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"
+    depends_on:
+      - elasticsearch
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - elasticsearch
+
+  traffic-generator:
+    image: alpine
+    depends_on:
+      - logstash
+    command: >
+      sh -c '
+      apk add --no-cache curl &&
+      while true; do
+        AMOUNT=$$((RANDOM % 500));
+        USER_ID=$$((RANDOM % 100));
+        curl -X POST -H "Content-Type: application/json" \
+          -d "{\"user\":\"user_$$USER_ID\",\"amount\": $$AMOUNT}" \
+          http://logstash:5000;
+        sleep 1;
+      done
+      '
